@@ -1,0 +1,33 @@
+<div class="container" ng-controller="ordersController">
+	<div class="col-md-3">
+		<div class="form-group">
+			<form>
+				<label for="filter">Filter Products</label>
+				<input class="form-control" type="text" ng-model="filter_name" placeholder="Filter me...">
+			</form>
+		</div>
+	</div>
+	<div class="col-md-12">
+		<div class="col-md-4" style="padding: 5px; text-align: center;"  ng-repeat="product in products | orderBy: '-createdAt' | filter: filter_name track by $index">
+			<img class="img-responsive" alt="picture: {{ product.name }}" src="{{ product.img }}" style="width: 100%;">
+			<p>{{ product.name }}</p>
+			<p>({{ product.quantity }} left)</p>
+		</div>
+	</div>
+</div>
+<div class="container" ng-controller="ordersController">
+	<div class="col-md-12">	
+		<div class="col-md-6" style="text-align: center">
+			<h3><u>Recent Orders</u></h3>
+			<p ng-repeat="order in orders | orderBy: '-createdAt' | limitTo: 3">
+				{{ order.name }} purchased {{ order.quantity }} {{ order.product }} ({{ order.createdAt | date: 'MMMM dd, h:mm a' }})
+			</p>
+		</div>
+		<div class="col-md-6" style="text-align: center">
+			<h3><u>New Customers</u></h3>
+			<p ng-repeat="customer in customers | orderBy: '-createdAt' | limitTo: 3">
+				{{ customer.name }} joined the store. ({{ customer.createdAt | date: 'MMMM dd, h:mm a' }})
+			</p>
+		</div>
+	</div>
+</div>

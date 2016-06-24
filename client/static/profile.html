@@ -1,0 +1,11 @@
+<div ng-controller='profileController'>
+	<h2>This Customer</h2>
+	<p>{{ customer.name }}</p>
+	<h4>Customer's Orders</h4>
+	<ul ng-repeat='order in orders'>
+		<li> Product: {{ order.product }}</li>
+		<li> Quantity: {{ order.quantity }}</li>
+		<li> Date Ordered: {{ order.createdAt | date: 'MMMM dd, yyyy' }}</li>
+	</ul>	
+
+</div>

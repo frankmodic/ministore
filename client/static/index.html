@@ -1,0 +1,273 @@
+<html ng-app="orders_app">
+<head>
+	<title>Buy Stuff!</title>
+<!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.12.1/jquery.min.js"></script>
+	<script src='https://ajax.googleapis.com/ajax/libs/angularjs/1.3.5/angular.min.js'></script>
+	<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.5/angular-route.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.0/angular-messages.js"></script>
+	<script>
+	// PUT ANGULAR CODE HERE
+		// Let's create our angular module
+	var orders_app = angular.module('orders_app', ['ngRoute', 'ngMessages']);
+
+		orders_app.config(function ($routeProvider) {
+			$routeProvider
+				.when('/',{
+					templateUrl: '/dashboard.html'
+				})
+				.when('/customers',{
+					templateUrl: '/customers.html'
+				})
+				.when('/orders',{
+					templateUrl: '/orders.html'
+				})
+
+				.when('/products',{
+					templateUrl: '/products.html'
+				})
+
+
+				.otherwise({
+					redirectTo: '/'
+				});
+		});
+
+		// spend some time understanding the difference and how/why we are using callbacks here.
+		// Now let's create a controller with some hardcoded data!
+		orders_app.controller('CustomersController', function($scope, CustomerFactory) {
+				
+		CustomerFactory.index(function(data) {
+		  $scope.customers = data;
+		});
+
+			$scope.addcustomer = function(data) {
+				console.log('test1')
+				CustomerFactory.create($scope.new_customer, function(add_error){
+					if(add_error.error){
+						console.log(add_error.error);
+						$scope.error = add_error.error;
+						CustomerFactory.index(function(data){
+							// $scope.error = ''
+							$scope.customers = data;
+						})  
+					}
+					else{
+						CustomerFactory.index(function(data2){
+							console.log(data2);
+							$scope.error = ''
+							$scope.customers = data2;
+						})   
+					}
+				})
+			}
+
+			$scope.removecustomer = function(data) {
+			  CustomerFactory.delete(data, function(){
+					CustomerFactory.index(function(data) {
+					  $scope.customers = data;
+					  // anything else that you want to happen after storing friends to $scope
+					});
+			  })
+			}
+
+
+		})
+
+		orders_app.controller('ordersController', function(orderFactory, CustomerFactory, productFactory, $scope){
+			$scope.orders = [];
+			$scope.customers = [];
+			$scope.products = [];
+			$scope.newOrder = {};
+			$scope.qtylist = [];
+
+			orderFactory.getOrders(function(data){
+				$scope.orders = data;
+			});
+
+			CustomerFactory.index(function(data){
+				$scope.customers = data;
+				$scope.newOrder.name = $scope.customers[0]
+			});
+			productFactory.index(function(data){
+				$scope.products = data;
+				$scope.newOrder.product = $scope.products[0]
+				for(var i=1; i<= $scope.newOrder.product.quantity; i++){
+					$scope.qtylist.push(i)
+				}
+				$scope.newOrder.quantity = $scope.qtylist[0]
+			});				
+
+			$scope.update = function(){
+				$scope.qtylist = [];
+				for(var i=1; i<= $scope.newOrder.product.quantity; i++){
+					$scope.qtylist.push(i)
+				}
+				$scope.newOrder.quantity = $scope.qtylist[0]
+			}
+			$scope.addOrder = function(error_msg, prod_msg){
+				orderFactory.addOrder($scope.newOrder, function(data){
+						$scope.orders = data;
+						$scope.newOrder = {};
+					});
+				orderFactory.getOrders(function(data){
+				for(var i; i< $scope.newOrder.quantity; i++){
+					$scope.qtylist.pop();
+				}
+				$scope.newOrder = {};
+				$scope.newOrder.quantity = $scope.qtylist[0]
+				})
+				// if(error_msg.error){
+				// 	console.log(error_msg.error);
+				// 	$scope.error = error_msg.error;
+				// }
+				// else{
+				// 	if(prod_msg.error){
+				// 	console.log(prod_msg.errors);
+				// 	$scope.errors = prod_msg.errors;
+				// 	}
+				// 	else{
+				}
+			})
+		// 	}
+		// })
+
+	orders_app.controller('productsController', function($scope, CustomerFactory, productFactory, orderFactory) {
+		$scope.products = [];
+
+		productFactory.index(function(data) {
+		  $scope.products = data;
+		  console.log(data)
+		  console.log($scope.products)
+		});
+		$scope.addproduct = function() {
+			productFactory.create($scope.new_product, function(add_error){
+				if(add_error.error){
+					console.log(add_error.error);
+					$scope.error = add_error.error;
+				}
+				else{
+					productFactory.index(function(data){
+						$scope.error = ''
+						$scope.products = data;
+					})   
+					$scope.new_product = {}; 
+				}
+			})
+		}
+	})
+
+	orders_app.factory('CustomerFactory', function($http) {
+		var factory = {};
+		var customers = [];
+		var user_names = [];
+	//Restful syntax: index = get all that object
+		factory.index = function(callback) {
+
+		  $http.get('/customers').success(function(output) {
+
+			customers = output;
+			callback(output);
+				// for(var i=0;i<customers.length;i++){	
+				// 	user_names.push(customers[i].name);
+				// }
+			})
+		}
+		// note the use of callbacks!
+		// Restful syntax: create = add one to that object
+		factory.create = function(info, callback) {
+			$http.post('/customers', info).success(function(data){
+				// for(var i in user_names){
+				// 	console.log('users.name =', user_names[i])
+				// 	if(info.name !== undefined){
+					console.log(data)
+						if(data.error){
+							callback(data)
+						}
+						else{
+							customers.push(data)
+							console.log(customers);
+							callback(customers)
+						}
+				// 	}
+				// }
+			})
+		}
+
+		factory.delete = function(data, callback) {
+			$http.delete('/customers/' + data).success(function($http){
+				callback();
+			})
+		}
+
+		return factory;
+	});
+
+		orders_app.factory('orderFactory', function($http){
+		var factory = {};
+		var orders = [];
+
+		factory.getOrders = function(callback){
+			$http.get('/orders').success(function(output){
+				orders = output;
+				callback(orders);
+			});
+
+		}
+
+		factory.addOrder = function(new_order, callback){
+			$http.post('/orders', new_order).success(function(data){
+				orders.push(data)
+				callback(orders);
+			})
+		}
+		return factory;
+
+
+	})
+
+		orders_app.factory('productFactory', function($http) {
+		var factory = {};
+		var products = [];
+	//Restful syntax: index = get all that object
+		factory.index = function(callback) {
+		  // Where do we get access to $http?
+		  $http.get('/products').success(function(output) {
+			products = output;
+			callback(products);
+			})
+		}
+		factory.create = function(info, callback) {
+			$http.post('/products', info).success(function($http){
+				// for(var i in user_names){
+				// 	console.log('users.name =', user_names[i])
+				// 	if(info.name !== undefined){
+					console.log($http.error)
+						if($http.error){
+							callback($http)
+						}
+						else{
+							products.push($http)
+							callback(products)
+						}
+				// 	}
+				// }
+			})
+		}
+		return factory;
+	});
+	</script>
+</head>
+<!-- everything in the body is going to use the friends controller (this gives us access to the friends controller $scope) -->
+<body>
+<div class="container">
+	<div class="pull-right">
+		<a href="#/">Dashboard</a> | <a href="#/customers">Customers</a> | <a href="#/orders">Orders</a> | <a href="#/products">Products</a>
+	</div>
+	<div style="padding-top: 50px;" ng-view=''>
+
+	</div>
+</div>
+</body>
+</html>

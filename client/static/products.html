@@ -1,0 +1,51 @@
+<div class="container" ng-controller="productsController">
+	<div class="col-md-4">
+		<div class="form-group">
+			<form>
+				<label for="filter">Filter Products</label>
+				<input class="form-control" type="text" ng-model="filter_name" placeholder="Filter me...">
+			</form>
+		</div>
+		<h4><u>Add a new product</u></h4>
+		<form name='productForm' ng-submit='addproduct()'>
+			<div class="form-group">
+				<label for="product_name">Name:</label>
+				<input class="form-control" name="name" type="text" ng-model="new_product.name" placeholder="Insert product name..." ng-minlength='4' required >
+				<div ng-messages="productForm.name.$error">
+					<p style="color: red;" ng-message="minlength">Product name is too short.</p>
+				 </div>
+			</div>
+			<div class="form-group">
+				<label for="customer_name">Image (url):</label>
+				<input class="form-control" name="url" type="text" ng-model="new_product.img" placeholder="http://" required >
+<!-- 				<div ng-messages="productForm.url.$error">
+					<p ng-message="required">url cannot be blank!</p>
+				</div> -->
+			</div>
+			<div class="form-group">
+				<label for="customer_name">Description</label>
+				<textarea class="form-control" rows="3" type="text" ng-model="new_product.desc" name='desc' placeholder="Insert description..." required></textarea>
+<!-- 				<div ng-messages="productForm.desc.$error">
+					<p ng-message="required">Desc cannot be blank!</p>
+				</div> -->
+			</div>
+			<div class="form-group">
+				<label for="order">Quantity</label>
+				<input type="number" name='quantity' class="form-control" ng-model="new_product.quantity" ng-min='1' required >
+				<div ng-messages="productForm.quantity.$error">
+					<p style="color: red;" ng-message="min">Quantity must be at least 1.</p>
+				 </div>
+			</div>
+
+			<p style="color: red;" ng-if="$scope.error = 'True'">{{error}}</p>
+			<button type="submit" class="btn btn-primary pull-right">Create</button><br>
+		</form>
+	</div>
+	<div class="col-md-8" style="overflow:scroll; height: 473px; ">
+		<div class="col-md-4" style="padding: 5px;text-align: center;"  ng-repeat="product in products | orderBy: '-createdAt' | filter: filter_name track by $index">
+			<img class="img-responsive" alt="Air Jordan 1 Bred" src="{{ product.img }}" style="width: 100%;">
+			<p>{{ product.name }}</p>
+			<p>({{ product.quantity }} left)</p>
+		</div>
+	</div>
+</div>
